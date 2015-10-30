@@ -1,9 +1,9 @@
-(ns re-frame.router
+(ns re-work.router
   (:refer-clojure :exclude [flush])
   (:require-macros [cljs.core.async.macros :refer [go-loop go]])
   (:require [reagent.core        :refer [flush]]
-            [re-frame.handlers   :refer [handle]]
-            [re-frame.utils      :refer [warn error]]
+            [re-work.handlers   :refer [handle]]
+            [re-work.utils      :refer [warn error]]
             [cljs.core.async     :refer [chan put! <! timeout]]))
 
 ;; -- The Event Conveyor Belt  --------------------------------------------------------------------

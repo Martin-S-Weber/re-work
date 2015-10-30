@@ -1,6 +1,6 @@
-(ns re-frame.handlers
-  (:require [re-frame.db         :refer [app-db]]
-            [re-frame.utils      :refer [first-in-vector warn error]]))
+(ns re-work.handlers
+  (:require [re-work.db         :refer [app-db]]
+            [re-work.utils      :refer [first-in-vector warn error]]))
 
 
 ;; -- composing middleware  -----------------------------------------------------------------------
@@ -54,7 +54,7 @@
 
 (defn register-base
   "register a handler for an event.
-  This is low level and it is expected that \"re-frame.core/register-handler\" would
+  This is low level and it is expected that \"re-work.core/register-handler\" would
   generally be used."
   ([event-id handler-fn]
     (when (contains? @id->fn event-id)

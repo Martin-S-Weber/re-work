@@ -1,5 +1,7 @@
 # TodoMVC done with re-frame
 
+TODO: Seriously? TodoMVC? Can't we find an example that increases core temperatures of developers and CPUs alike?
+
 A [re-frame](https://github.com/Day8/re-frame) implementation of [TodoMVC](http://todomvc.com/).
 
 

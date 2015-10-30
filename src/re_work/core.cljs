@@ -1,10 +1,10 @@
-(ns re-frame.core
+(ns re-work.core
   (:require
-    [re-frame.handlers   :as handlers]
-    [re-frame.subs       :as subs]
-    [re-frame.router     :as router]
-    [re-frame.utils      :as utils]
-    [re-frame.middleware :as middleware]))
+    [re-work.handlers   :as handlers]
+    [re-work.subs       :as subs]
+    [re-work.router     :as router]
+    [re-work.utils      :as utils]
+    [re-work.middleware :as middleware]))
 
 
 ;; --  API  -------
@@ -35,7 +35,7 @@
 
 
 ;; --  Logging -----
-;; re-frame uses the logging functions: warn, log, error, group and groupEnd
+;; re-work uses the logging functions: warn, log, error, group and groupEnd
 ;; By default, these functions map directly to the js/console implementations
 ;; But you can override with your own (set or subset):
 ;;   (set-loggers!  {:warn  my-warn   :log  my-looger ...})

@@ -1,8 +1,8 @@
-(ns re-frame.test.middleware
+(ns re-work.test.middleware
   (:require-macros [cemerick.cljs.test :refer (is deftest)])
   (:require [cemerick.cljs.test :as t]
             [reagent.ratom  :refer [atom]]
-            [re-frame.middleware :as middleware]))
+            [re-work.middleware :as middleware]))
 
 (enable-console-print!)
 

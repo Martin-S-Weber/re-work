@@ -1,8 +1,8 @@
-(ns re-frame.middleware
+(ns re-work.middleware
   (:require
     [reagent.ratom  :refer [IReactiveAtom]]
-    [re-frame.undo  :refer [store-now!]]
-    [re-frame.utils :refer [warn log group groupEnd error]]
+    [re-work.undo  :refer [store-now!]]
+    [re-work.utils :refer [warn log group groupEnd error]]
     [clojure.data   :as data]))
 
 
@@ -18,7 +18,7 @@
   You don't have to use this middleware directly. It is automatically applied to
   your handler's middleware when you use \"register-handler\".
   In fact, the only way to by-pass automatic use of \"pure\" in your middleware
-  is to use the low level registration function \"re-frame.handlers/register-handler-base\""
+  is to use the low level registration function \"re-work.handlers/register-handler-base\""
   [handler]
   (fn pure-handler
     [app-db event-vec]

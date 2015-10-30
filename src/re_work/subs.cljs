@@ -1,8 +1,8 @@
-(ns re-frame.subs
+(ns re-work.subs
  (:require
    [reagent.ratom  :refer [make-reaction]]
-   [re-frame.db    :refer [app-db]]
-   [re-frame.utils :refer [first-in-vector warn error]]))
+   [re-work.db    :refer [app-db]]
+   [re-work.utils :refer [first-in-vector warn error]]))
 
 
 ;; maps from handler-id to handler-fn

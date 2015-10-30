@@ -1,4 +1,6 @@
-# Reagent example app now using re-frame
+# Simple Example App for re-work
+
+TODO: need to show a re-work simple app. Maybe the example app?
 
 Run "`lein do clean, figwheel`" in a terminal to compile the app, and then open `http://localhost:3449/example.html`.
 
