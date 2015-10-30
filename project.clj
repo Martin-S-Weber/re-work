@@ -1,11 +1,10 @@
-(defproject re-frame "0.4.1"
-  :description  "A Clojurescript MVC-like Framework For Writing SPAs Using Reagent."
-  :url          "https://github.com/Day8/re-frame.git"
+(defproject re-work "0.0.1-PRE"
+  :description  "the most excellent re-frame on workers"
+  :url          "https://github.com/Martin-S-Weber/re-work.git"
   :license      {:name "MIT"}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-3211"]
-                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
-                 [reagent "0.5.0"]]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
 
   :profiles     {:debug {:debug true}
                  :dev   {:dependencies [[spellhouse/clairvoyant "0.0-48-gf5e59d3"]]
