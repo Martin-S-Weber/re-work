@@ -96,6 +96,8 @@ Copyright © 2015 Martin S. Weber (re-work)
 
 Distributed under The MIT License (MIT) - See LICENSE.txt
 
+[WebWorker]:https://developer.mozilla.org/en-US/docs/Web/API/Worker
+[SharedWorker]:https://developer.mozilla.org/en/docs/Web/API/SharedWorker
 [component]:https://github.com/stuartsierra/component
 [re-frame]:https://github.com/Day8/re-frame
 [SPAs]:http://en.wikipedia.org/wiki/Single-page_application
