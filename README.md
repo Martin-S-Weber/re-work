@@ -18,7 +18,7 @@ re-frame is a pattern for writing [SPAs] in ClojureScript, using [re-frame] and 
 
 This repo contains both a **description of this pattern** and a **reference implementation**.
 
-To quote McCoy: "It's re-frame, Jim, but not as we know it".
+To paraphrase McCoy: "It's re-frame, Jim, but not as we know it".
 
 To build a re-work app, you:
  - do all the things you'd do for a re-frame app (data, query, view, control layer)
@@ -108,6 +108,7 @@ Distributed under The MIT License (MIT) - See LICENSE.txt
 
 [WebWorker]:https://developer.mozilla.org/en-US/docs/Web/API/Worker
 [SharedWorker]:https://developer.mozilla.org/en/docs/Web/API/SharedWorker
+[ServiceWorker]:https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API
 [component]:https://github.com/stuartsierra/component
 [re-frame]:https://github.com/Day8/re-frame
 [SPAs]:http://en.wikipedia.org/wiki/Single-page_application
