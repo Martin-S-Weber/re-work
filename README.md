@@ -67,6 +67,16 @@ This presents us with technical challenges surrounding the [WebWorker]s themselv
 
 With the tools picked, we "only" need to establish utility code that launches workers for us in the main javascript context, wires them together as necessary, dispatches to these workers and finally handle replies from the workers as well. This is where re-work comes in. re-work is about providing the utility/glue code that brings these workers together as well as documenting how to approach the problem with components and the presented code.
 
+### Why fork re-frame?
+
+Forking re-frame to implement add-on functionality is the most pragmatic approach right now as there need to be done a couple of modifications to the existing [re-frame] code:
+
+1. re-frame needs to be a component to play along nicely with re-work. In particular, it can't just start the event router loop upon being required, oy!
+2. The re-frame component needs to accept a dispatch function - we need to patch it together in some contexts, while we can use the plain one in others
+3. whatever else comes up on the way
+
+If/When re-frame becomes a component itself without code being run on require, this naturally can be dropped again and re-work shrinks down to the couple of files it really needs to be - re-work has no interest in duplicating and tracking re-frame's work so far and its on-going improvements.
+
 ## Guiding Philosophy
 
 We are assuming we've all been good citizens about how we implement our application. In particular, we believe FRP is the correct approach, and the implicated "reduce" mentality of having a local state and handling a passed argument (event, ...). We also believe in some FP basics, so we are not really interested in how the computation takes place, as long as the result of the computation is handed to us. In particular, we frown upon side-effects in computational code, like state updates. State either bubbles up to the top and can be passed around, or we frown and ponder how to get rid of it.
