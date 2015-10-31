@@ -95,7 +95,7 @@ We have structured the computational parts of our application into event handler
 
 This is what our application looks like at this point:
 
-<img src="resources/img/re-frame-app.png">
+<img src="resources/img/re-frame-app.png" />
 
 This is all fine and good, but we run into a problem when the application starts doing too much in the main js context. Too much computational pressure makes the animations stutter. And if we are to take [SPA]s serious as an application platform, we potentially want to compute a _*lot*_. So when our applications become baroque (e.g., as in "enterprise"), we'd like it to look something like this:
 
@@ -127,6 +127,12 @@ Additionally, the rendering needs to manipulate the browser state, after all it 
 
 Each worker of course can have its own asynchronous entities. There is no necessity to have timers or other asynchronous code run in the main js context. All code portions involved in this can happily move to another worker, so long they stay together, or are prepared to communicate via message passing between the workers. It appears preferrable to have asynchronous API use intermingled with each other, or dependant on specific state remain within the same component (so they can easily end up on the same worker).
 
+### Distributing Computation
+
+After careful consideration, we are prepared to begin moving of the entangled balls of event handling, state and asynchronous into a component each, and keep in mind that this component will run in its own js context, communicating with the rest of the application only via messages. For some randome sample application of ours, we might arrive at a picture similar to the following.
+
+<img src="resources/img/re-frame-app-re-worked-1.png" />
+
 ## Event Flow
 
 ### Dispatching Events
@@ -146,6 +152,7 @@ Each worker of course can have its own asynchronous entities. There is no necess
 ## Licence
 
 Copyright © 2015 Michael Thompson (re-frame)
+
 Copyright © 2015 Martin S. Weber (re-work)
 
 Distributed under The MIT License (MIT) - See LICENSE.txt
