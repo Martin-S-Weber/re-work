@@ -44,8 +44,8 @@ It's not released yet. You cannot use it yet.
 
  - [What Problem Does It Solve?](#what-problem-does-it-solve)
  - [Guiding Philosophy](#guiding-philosophy)
- - [Functionality of Your Application](#functionality-of-your-application)
  - [When Events Are All You Care About](#when-events-are-all-you-care-about)
+ - [Functionality of Your Application](#functionality-of-your-application)
  - [Event Flow](#event-flow)
  - [Dispatching Events](#dispatching-events)
  - [Event Handlers](#event-handlers)
@@ -123,7 +123,9 @@ Additionally, the rendering needs to manipulate the browser state, after all it 
 
 #### timers
 
-Each worker of course can have its own timers. There is no necessity to have timers or other asynchronous code run in the main js context. All code portions involved in this can happily move to another worker, so long they stay together within the same component (so they end up on the same worker).
+(and other **asynchronous** APIs)
+
+Each worker of course can have its own asynchronous entities. There is no necessity to have timers or other asynchronous code run in the main js context. All code portions involved in this can happily move to another worker, so long they stay together, or are prepared to communicate via message passing between the workers. It appears preferrable to have asynchronous API use intermingled with each other, or dependant on specific state remain within the same component (so they can easily end up on the same worker).
 
 ## Event Flow
 
