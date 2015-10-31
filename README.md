@@ -77,11 +77,17 @@ We have approached our problem space by dividing it into layers. Querying over o
 
 We have structured the computational parts of our application into event handlers. The supporting code in all their namespaces is referenced in the event handlers to implement the application data flow. Essentially, from a black-box point of view, we could live with no way of calling the code. We could implement the whole functionality just by running event handlers, and updating our local application database, our reduce accumulator, with the results of our computations. The application database then would contain all the results that the caller was interested in. Let's ignore how they would get to the DB itself, and acknowledge that our event handlers suffice to implement the application.
 
+This is what our application looks like at this point:
+
+<img src="resources/img/re-frame-app.png">
+
+The divide in responsibilities we have arrived at after quite a journey, reconsider [re-frame]'s README.
+
 ### When Events Are All You Care About
 
-So really, all we care about is the incoming events and the local state that we need as memory. In particular, there is no need to access external, global, write-able locations. Manipulations on the browser state will be done by our rendering framework (i.e., react) for us, all we are concerned about is computing data.
+We have prepared so all we care about is the incoming events and the local state that we need as memory. In particular, there is no need to access external, global, write-able locations. Manipulations on the browser state will be done by our rendering framework (i.e., react) for us, all we are concerned about is computing data. Leaving out the corner cases that present a somewhat "meta" challenge to your application, i.e., management of the application _itself_ (which usually require fiddling with global mutable state), the normal application flow (and its computations and side-effects) are solely represented by the initial state, events flowing through the system and the handlers that react on them.
 
-If that is the case, we don't care _where_ we are computing the data. In particular, if we have an event router that is capable of dispatching the event to a separate js context, plus make the memory accessible (more on that later), we will happily have our event handlers run in a separate context, because all the data is available _as arguments_ to the event handler.
+If that is the case, we don't care _where_ we are computing the data. In particular, if we have an event router that is capable of dispatching the event to a separate js context, plus make the memory accessible (more on that later), we will happily have our event handlers run in a separate context, because all the data is available _as arguments_ to the event handler. So let's look at all the features of our re-frame app, above, and see if they would resist moving to a different js context.
 
 ## Event Flow
 
