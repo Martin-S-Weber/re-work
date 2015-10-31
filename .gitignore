@@ -16,3 +16,4 @@ compiled/
 misc/
 /examples/todomvc/resources/public/js/
 /examples/simple/resources/public/js/
+resources/img/*.dia~
