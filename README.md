@@ -81,6 +81,12 @@ If/When re-frame becomes a component itself without code being run on require, t
 
 We are assuming we've all been good citizens about how we implement our application. In particular, we believe FRP is the correct approach, and the implicated "reduce" mentality of having a local state and handling a passed argument (event, ...). We also believe in some FP basics, so we are not really interested in how the computation takes place, as long as the result of the computation is handed to us. In particular, we frown upon side-effects in computational code, like state updates. State either bubbles up to the top and can be passed around, or we frown and ponder how to get rid of it.
 
+### When Events Are All You Care About
+
+We have prepared so all we care about is the incoming events and the local state that we need as memory. In particular, there is no need to access external, global, write-able locations. Manipulations on the browser state will be done by our rendering framework (i.e., react) for us, all we are concerned about is computing data. Leaving out the corner cases that present a somewhat "meta" challenge to your application, i.e., management of the application _itself_ (which usually require fiddling with global mutable state), the normal application flow (and its computations and side-effects) are solely represented by the initial state, events flowing through the system and the handlers that react on them.
+
+If that is the case, we don't care _where_ we are computing the data. In particular, if we have an event router that is capable of dispatching the event to a separate js context, plus make the memory accessible (more on that later), we will happily have our event handlers run in a separate context, because all the data is available _as arguments_ to the event handler. So let's look at all the features of our re-frame app, above, and see if they would resist moving to a different js context.
+
 ### Functionality of Your Application
 
 We have approached our problem space by dividing it into layers. Querying over our know data. Computing the derived data from our input(s) and/or state(s). Displaying the data. Concering state-ful (internal to the application) updates, we have avoided them (and grouped it in a dirty namespace called ```*.util```), because the most important side-effect of our [SPA] is changing its display.
@@ -91,13 +97,33 @@ This is what our application looks like at this point:
 
 <img src="resources/img/re-frame-app.png">
 
-The divide in responsibilities we have arrived at after quite a journey, reconsider [re-frame]'s README.
+This is all fine and good, but we run into a problem when the application starts doing too much in the main js context. Too much computational pressure makes the animations stutter. And if we are to take [SPA]s serious as an application platform, we potentially want to compute a _*lot*_. So when our applications become baroque (e.g., as in "enterprise"), we'd like it to look something like this:
 
-### When Events Are All You Care About
+To get to this point, let's consider each responsibility in our source re-frame application and see what we can do with it.
 
-We have prepared so all we care about is the incoming events and the local state that we need as memory. In particular, there is no need to access external, global, write-able locations. Manipulations on the browser state will be done by our rendering framework (i.e., react) for us, all we are concerned about is computing data. Leaving out the corner cases that present a somewhat "meta" challenge to your application, i.e., management of the application _itself_ (which usually require fiddling with global mutable state), the normal application flow (and its computations and side-effects) are solely represented by the initial state, events flowing through the system and the handlers that react on them.
+#### browser manipulation
 
-If that is the case, we don't care _where_ we are computing the data. In particular, if we have an event router that is capable of dispatching the event to a separate js context, plus make the memory accessible (more on that later), we will happily have our event handlers run in a separate context, because all the data is available _as arguments_ to the event handler. So let's look at all the features of our re-frame app, above, and see if they would resist moving to a different js context.
+(and **synchronous**, **your side effects**)
+
+Let's begin with the bummers first, because some things just won't be able to be moved. Webworkers carry two "deficiencies" - they cannot access the global ```window``` object (but instead have a different global scope object) and they cannot access objects manipulatively in the main js context. So when we need to do either - manipulate an existing value in the main javascript context, or access, e.g., ```window.document```, we'll have to bite the bullet and leave the work in the main context.
+
+#### state & event handlers
+
+In contrast, our application state is "just a value". We take this value very dearly, but nothing stops us from having it live in a different javascript context. It is getting better actually, as we can usually divide our data into either a portion per module, or a shared portion, plus additionally one portion per module. What is a module? The measure of entanglement / interdependencies of state should answer that question for us. So if each "module" has all the state it needs, in a js value, then we can not only move state management to a different js context, we can even split it up as we need it.
+
+All we need to do is to present the event handlers with a series of evolving states that adheres to the event handlers expectations with regards the effects an event handler carries in re-frame context. So when the event handler returns a new value for the database, and another handler is called, the second handler can rightfully expect the application db it gets passed as first argument to have the adjustments of the first handler. At first sight, this applies to the whole of the app-db, yet of course the handler will only see modifications of values it actually consumes. If one group of handlers only work with data under the ```:foo``` key, and another only with data under the ```:bar``` key, the second group need not be concerned with what is actually under ```:foo``` when it is being passed the database. It follows that we can easily put the group of ```:foo``` fighters into their own js context (worker), and the ```:bar``` folk into another js context (another worker).
+
+With groups of handlers living in different js contexts, incidentally we will need some event routing to get the events to the correct worker, handling the asynchronous nature of the workers, passing data back and forth, establish protocols for lifecycle management (I hope that rings a bell).
+
+#### rendering
+
+This computation in the background, in foreign contexts, is all fine and good, but until we step up to witness the resulting values, they have been in vain. Rendering the data requires access to the app-db. Again, like the event handlers, not to all of it, but a crucial subset of data contains the direct (or indirect) content that we want to have rendered. This requires feeding the updates of the event handlers back together to synthesize a superset app-db that resembles the app-db of our initial re-frame application again.
+
+Additionally, the rendering needs to manipulate the browser state, after all it is going to change the DOM that is displayed. So it needs to live in the main js context. And it needs access to the merged application state, whereas so far we have only made access to it impossible, and split up the state.
+
+#### timers
+
+Each worker of course can have its own timers. There is no necessity to have timers or other asynchronous code run in the main js context. All code portions involved in this can happily move to another worker, so long they stay together within the same component (so they end up on the same worker).
 
 ## Event Flow
 
