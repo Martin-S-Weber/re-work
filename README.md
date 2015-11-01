@@ -137,7 +137,7 @@ Whoa there, holy complexity. Or, is it? We'll revisit that in a bit. Let's assum
 
 #### Can't we use servants?
 
-[servant] is a cljs library which wraps (plain) [WebWorker]s and makes a set of functions defined with ```(defservantfn)``` available for "cross-js-context RPC". Additionally, it allows pool of workers, and keeps a queue of available workers (via ```core.async```) so that one might serially dispatch RPCs onto the pool of available workers (to stop our immediate daydream: the magic number (maximum amount of workers) [seems to be]:(http://stackoverflow.com/questions/13574158/number-of-web-workers-limit) lower than 20 reliably).
+[servant] is a cljs library which wraps (plain) [WebWorker]s and makes a set of functions defined with ```(defservantfn)``` available for "cross-js-context RPC". Additionally, it allows pool of workers, and keeps a queue of available workers (via ```core.async```) so that one might serially dispatch RPCs onto the pool of available workers (to stop our immediate daydream: the magic number (maximum amount of workers) [seems to be] lower than 20 reliably).
 
 [servant] performs the following choreography:
 
@@ -183,6 +183,7 @@ Copyright © 2015 Martin S. Weber (re-work)
 
 Distributed under The MIT License (MIT) - See LICENSE.txt
 
+[seems to be]:(http://stackoverflow.com/questions/13574158/number-of-web-workers-limit)
 [data transfer]:https://html.spec.whatwg.org/multipage/infrastructure.html#safe-passing-of-structured-data
 [Transferable]:https://developer.mozilla.org/en-US/docs/Web/API/Transferable
 [servant]:https://github.com/MarcoPolo/servant
