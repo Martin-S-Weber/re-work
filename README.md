@@ -183,7 +183,7 @@ Copyright © 2015 Martin S. Weber (re-work)
 
 Distributed under The MIT License (MIT) - See LICENSE.txt
 
-[seems to be]:(http://stackoverflow.com/questions/13574158/number-of-web-workers-limit)
+[seems to be]:http://stackoverflow.com/questions/13574158/number-of-web-workers-limit
 [data transfer]:https://html.spec.whatwg.org/multipage/infrastructure.html#safe-passing-of-structured-data
 [Transferable]:https://developer.mozilla.org/en-US/docs/Web/API/Transferable
 [servant]:https://github.com/MarcoPolo/servant
