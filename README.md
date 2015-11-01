@@ -157,7 +157,16 @@ Whoa there, holy complexity. Or, is it? We'll revisit that in a bit. Let's assum
 
 The "_servant protocol_" tips the hat to the fact that there's two ways of passing arguments between execution contexts - either perform a structured clone (a deep copy of data which can be copied, see the algorithm) or actually hand over the data to the other execution context (via the [Transferable] interface (specifically ```ArrayBuffer```s)), cf. [data transfer]. There's an obvious consideration between safety, simplicity and immutability to be had vs. extra performance here. [servant] doesn't make the choice for us, but instead offers functions to either copy (```(standard-message)```) or transfer (back and forth: ```(array-buffer-message)``` to, but not back: ```(array-buffer-message-standard-reply)```) data, and uses the encoder function as argument for the dispatch. The protocol itself just tells the receiving end which function to call, how its arguments were passed and what sort of data transfer mechanism for the reply is expected.
 
-With these tools at our disposal, we can actually tackle the CPU hog simply by dispatching our computations onto multiple servant-managed workers.
+With these tools at our disposal, we can actually tackle the CPU hog simply by dispatching our computations onto multiple servant-managed workers. With our usage of re-frame itself, we have been taught how to break up a "bigger" event handler into smaller ones - this time we are breaking it up into three sections:
+
+1. argument handling/passing
+2. the isolated computation itself
+3. receiving the result of the computation
+
+In our main js context, we initiate the passing off of data and responsibility of execution to the worker, which then begins the required computation. Once it is finished, it will return its result by notifying the main js context. Servant will put the resulting values onto the result channel. All we have to do is to get the value out once it's there, and the final considerations upon receipt of the result can be performed in the main js context. Particularly, the resulting value(s) can be stored in the application database, making them available for the views to render, further events down the road and so forth.
+
+#### Critique & Aesthetics
+
 
 ## Event Flow
 
