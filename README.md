@@ -133,6 +133,32 @@ After careful consideration, we are prepared to begin moving of the entangled ba
 
 <img src="resources/img/re-frame-app-re-worked-1.png" />
 
+Whoa there, holy complexity. Or, is it? We'll revisit that in a bit. Let's assume this all appears too complicated, as, after all, all we went to set out was to overcome the CPU hog problem with the solutions we've learned to embrace nowadays. So, wouldn't we be served well enough by an equivalent of ```(future)```, which could take a block of code, and execute it in a different context? If all we care about is an enumeration of a fixed API interface which we want to potentially run in these futures, [servant] looks like it might just scratch our itch. So let's make a tour of exploration of this nice little library.
+
+#### Can't we use servants?
+
+[servant] is a cljs library which wraps (plain) [WebWorker]s and makes a set of functions defined with ```(defservantfn)``` available for "cross-js-context RPC". Additionally, it allows pool of workers, and keeps a queue of available workers (via ```core.async```) so that one might serially dispatch RPCs onto the pool of available workers (to stop our immediate daydream: the magic number (maximum amount of workers) [seems to be]:(http://stackoverflow.com/questions/13574158/number-of-web-workers-limit) lower than 20 reliably).
+
+[servant] performs the following choreography:
+
+1. It supports creating workers and loading speficied (js) sources for it (i.e., executing ```new Worker(src)```) 
+2. It offers an API fn to check whether our code is running in the main js, or in a webworker context. It expects us to branch / protect execution accordingly.
+3. The startup protocol involves:
+  1. Creating a (```core.async```) channel that holds the available workers
+	2. Creating (the requested amount of) Worker instances and putting them onto the channel
+	3. We are expected to check for worker context, and in the worker context, call ```(bootstrap)```, which sets up the worker event handling to implement the servant protocol
+	4. The part of our API which has been declared via ```(defservantfn)``` becomes available for dispatch to. We remember its implementations have full access to all functions, but is jailed in its own execution context.
+4. In the main js context, we now have a channel of idle workers. This is passed to the dispatch / call function, ```(servant-thread)```, which takes
+  - the channel of (idle) workers
+	- The name of the function to call
+	- An encoder fn for the servant protocol
+	- the arguments for the function.
+	- and returns a channel from which the function result (i.e., data returned from the foreign execution context in a way according to the servant protocol) can be consumed.
+
+The "_servant protocol_" tips the hat to the fact that there's two ways of passing arguments between execution contexts - either perform a structured clone (a deep copy of data which can be copied, see the algorithm) or actually hand over the data to the other execution context (via the [Transferable] interface (specifically ```ArrayBuffer```s)), cf. [data transfer]. There's an obvious consideration between safety, simplicity and immutability to be had vs. extra performance here. [servant] doesn't make the choice for us, but instead offers functions to either copy (```(standard-message)```) or transfer (back and forth: ```(array-buffer-message)``` to, but not back: ```(array-buffer-message-standard-reply)```) data, and uses the encoder function as argument for the dispatch.
+
+With these tools at our disposal, we can actually tackle the CPU hog simply by dispatching our computations onto multiple servant-managed workers.
+
 ## Event Flow
 
 ### Dispatching Events
@@ -157,6 +183,9 @@ Copyright © 2015 Martin S. Weber (re-work)
 
 Distributed under The MIT License (MIT) - See LICENSE.txt
 
+[data transfer]:https://html.spec.whatwg.org/multipage/infrastructure.html#safe-passing-of-structured-data
+[Transferable]:https://developer.mozilla.org/en-US/docs/Web/API/Transferable
+[servant]:https://github.com/MarcoPolo/servant
 [WebWorkerAPI]:https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API
 [WebWorker]:https://developer.mozilla.org/en-US/docs/Web/API/Worker
 [SharedWorker]:https://developer.mozilla.org/en/docs/Web/API/SharedWorker
