@@ -208,9 +208,11 @@ We acknowledge that computation without data (and thus state) is hard at best, s
 
 <img src="resources/img/re-frame-app-multilith2.png" />
 
-And while we're at moving state and computation away from the main context, why not get rid of _all_ of it but the most necessary pieces so our "dirty deeds" can be done?
+And while we're at moving state and computation away from the main context, why not get rid of _all_ of it but the most necessary pieces so our "dirty deeds" can be done? And introduce a single worker, whose job it is just to hold the global state of the application, while our main js context concentrates on as little state as possible. The majority of computation (and state manipulation!) now happens asynchronously in foreign, isolated js contexts.
 
 <img src="resources/img/re-frame-app-multilith3.png" />
+
+We should have a feeling of full circle with regards to [distributing computation](#distributing-computation). If having one re-frame event loop per context is fine, state and computation is locally bundled together to persist in this worker, then we can move our re-frame components between workers (and/or the main context) without having to adjust their API. They remain just handlers that interact with other handlers, there's no synchronous threshold involved. ...assuming we find a way to route events and data updates.
 
 ## Event Flow
 
