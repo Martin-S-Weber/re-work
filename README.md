@@ -196,6 +196,22 @@ Of course _global_ state synchronization is trivial (a handler ```(register-hand
 
 While we were gazing at the innards of [servant] to understand how it will impact our own application, we have noticed one thing: Workers are nearly trivially easy to use. Plus what servant itself is doing (_its_ event handling loop) is pretty self-explanatory and short as well. In our first sketch of the [distributed computation](#distributed-computation), we omitted all the arrows for the data flow. Was the fact that we can call ```postMessage``` in both directions too trivial? servant certainly exhibits the knobs via its encoding function. But it also does more work to automatically have the result make their way back. But... do we _need_ the results (as in, private foreign context state) in our main js context? Essentially all we need to know is what we want to show. So the question is "some of it, probably". The rest may return in its black box for all we care.
 
+So let's revisit responsibilities. We began our journey with something akin the following
+
+<img src="resources/img/re-frame-app-monolith.png" />
+
+and we want to spread out computation so that it looks more like this
+
+<img src="resources/img/re-frame-app-multilith.png" />
+
+We acknowledge that computation without data (and thus state) is hard at best, so the state starts moving away...
+
+<img src="resources/img/re-frame-app-multilith2.png" />
+
+And while we're at moving state and computation away from the main context, why not get rid of _all_ of it but the most necessary pieces so our "dirty deeds" can be done?
+
+<img src="resources/img/re-frame-app-multilith3.png" />
+
 ## Event Flow
 
 ### Dispatching Events
