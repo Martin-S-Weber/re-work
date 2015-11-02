@@ -139,6 +139,8 @@ Whoa there, holy complexity. Or, is it? We'll revisit that in a bit. Let's assum
 
 [servant] is a cljs library which wraps (plain) [WebWorker]s and makes a set of functions defined with ```(defservantfn)``` available for "cross-js-context RPC". Additionally, it allows pool of workers, and keeps a queue of available workers (via ```core.async```) so that one might serially dispatch RPCs onto the pool of available workers (to stop our immediate daydream: the magic number (maximum amount of workers) [seems to be] lower than 20 reliably).
 
+<img src="resources/img/re-frame-app-with-servants.png" />
+
 [servant] performs the following choreography:
 
 1. It supports creating workers and loading speficied (js) sources for it (i.e., executing ```new Worker(src)```) 
