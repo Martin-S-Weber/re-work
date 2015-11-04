@@ -231,6 +231,20 @@ And while we're at moving state and computation away from the main context, why 
 
 <img src="resources/img/re-frame-app-multilith3.png" />
 
+#### Multiple me's and the {monolith,plantation,team,republic}
+
+What happens when the end-user initiates our application multiple times (as in, multiple contexts open at the same time, two tabs open for example). This is only interesting in the case when these contexts can communicate (i.e., are within the same runtime environment), because when they cannot, there is no means of sharing state or computations directly.
+
+**me, myself and the monolith** - In this case the application simply does the work the application does multiple times. There's multiple top-level contexts, each with their own state and setup for computation. Not only are those contexts isolated from each other, but they are ignorant as well. If state transitions in for _me_ and _myself_ initiate I/O with the outside, there _is_ already a split-brain situation. 
+
+**me, myself and the plantation** - If the plantation is implemented using [servant], that means we are bound to using plain [WebWorker]s. These are private and not shareable. The verdict is the same as for the monolith: without other means of first-class synchronization between top-level contexts work is duplicated, state is isolated from each other, and the applications are ignorant of each other. Was there a _plantation_ implementation using shared or service workers, there would be potential for sharing access to the slaves, rendering the only requirement of leaving them pristine post-usage. XXX: This is worth re-visiting (as in, provide code to run servant facade on shared workers and service workers).
+
+From hereon out, we shall assume that there is a non-servant implementation which allows us which worker to use. Additionally we are concerning ourselves with the possibility of sharing workers between top-level application contexts. If we weren't, the net result in the evaluation of multiple top-level accesses does not change from the above.
+
+**me, myself and the team** - Here we regard _me_ and _myself_ as the manager of the team. There is potential to re-using the services of the team members of another manager, but only if the team members have been prepared before-hand to deal with the additional context of routing results back to the caller. Local state build-up in the team members is supported (and encouraged), as long as the context remains clear. Even though a lot of services are being re-used, the _global_ state is reproduced and we are letting the end-user face two separate application entities.
+
+**me, myself and the republic** - As usual in a republic, if you replace the representational part, nothing in the machinery itself changes. This is a curse and a chance as well. Multiple top-level invocations of the application have the ability to access a shared state natively. Picture an online shooter where you can have, e.g., a live top-scorer list or a full-display map of the play area in an additional open tab, accessing the same global state as the game itself.
+
 We should have a feeling of full circle with regards to [distributing computation](#distributing-computation) when looking at the republic and the team. If having one re-frame event loop per context is fine, state and computation is locally bundled together to persist in this worker, then we can move our re-frame components between workers (and/or the main context) without having to adjust their API. They remain just handlers that interact with other handlers, there's no synchronous threshold involved. ...assuming we find a way to route events and data updates, which shall be the next stops of our journey.
 
 ## Event Flow
