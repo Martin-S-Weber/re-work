@@ -70,7 +70,7 @@ When [SPA]s become richer and fatter and more featureful, it is not uncommon tha
 
 It also happens that on the runtime environment that [re-frame] targets, we have means available to us to leave the main javascript context with its event handlers, and enter into our own context. This is offered by different types of [WebWorker]s. With the [WebWorkerAPI], we can launch multiple javascript contexts, and essentially communicate via message passing between these share-nothing(-by-default-but-allow-transfer-of-data) environments.
 
-This presents us with technical challenges surrounding the [WebWorker]s themselves (the ones not detailed here are detailed under [Practical Considerations](#practical-considerations)). First and foremost, there is a problem with portability. Yes, only more modern browsers implement [WebWorker]s, but that's not the real problem. The real problem is that not all browser implementations agree on the extent of API available to running workers, in particular, launching further workers (they should support it, but, e.g., chrome doesn't). This documents the necessity to create the workers in the main context, and establish potential data flow dependencies manually. Furthermore, parallel access to our [SPA] now means we are re-launching these parallel workers. This may or may not be what we want to do. Plain [WebWorker]s only allow us the possibility of spawning them again and again. Luckily there are [SharedWorker]s (and [ServiceWorker]s as well, but those are even less implemented than SharedWorkers). These allow getting access to an established javascript context if the identifier of the worker matches up with an existing one.
+This presents us with technical challenges surrounding the [WebWorker]s themselves (the ones not detailed here are detailed under [Worker Applications](#worker-applications)). First and foremost, there is a problem with portability. Yes, only more modern browsers implement [WebWorker]s, but that's not the real problem. The real problem is that not all browser implementations agree on the extent of API available to running workers, in particular, launching further workers (they should support it, but, e.g., chrome doesn't). This documents the necessity to create the workers in the main context, and establish potential data flow dependencies manually. Furthermore, parallel access to our [SPA] now means we are re-launching these parallel workers. This may or may not be what we want to do. Plain [WebWorker]s only allow us the possibility of spawning them again and again. Luckily there are [SharedWorker]s (and [ServiceWorker]s as well, but those are even less implemented than SharedWorkers). These allow getting access to an established javascript context if the identifier of the worker matches up with an existing one.
 
 With the tools picked, we "only" need to establish utility code that launches workers for us in the main javascript context, wires them together as necessary, dispatches to these workers and finally handle replies from the workers as well. This is where re-work comes in. re-work is about providing the utility/glue code that brings these workers together as well as documenting how to approach the problem with components and the presented code.
 
@@ -276,13 +276,45 @@ Of the existing API, we already explicitly specify the event key when we registe
 At the same time, we might _not_ want to update our handler registrations, or cloud the vision onto event handling by orthogonal concepts such as computational distribution. In that case, we might rather want to use a global definition structure which maps workers onto the set of keys they will handle.
 
 
+### Worker Lifecycle management
+
+### Shopping List => API
+
+- Routing Registry
+- Event trampoline for workers
+- wrapper for receiving messages back
+- life cycle management of workers
+- event loop across them all
+
+### Paths
+
+- monolith : re-frame
+
+From hereon out, all need life cycle management
+
+- plantation: shared, non-shared. Optional routing registry. May implement pooling easily. Optional trampoline in worker. Optional wrapper in main. Least work, most impact on API...
+- team: shared, non-shared. Likely Routing registry. Pooling is hard (state sync). trampoline, wrapper, event loop.
+- republic: see team.
+
 ## Logging And Debugging
+
+- remember, console API is available to all workers.
+- logging events ...
+- debugging ? with .. events! ..and middleware!
+- dirty deeds - the perfect receiver
 
 ## Talking To A Server
 
+- talking to one server from one worker
+- talking to multiple/dynamic endpoints from one worker (component state)
+
 ## The CPU Hog Problem Revisited
 
-## Practical Considerations
+- explain impact of different approaches with our example application
+
+## Worker applications
+
+- down to leining profile settings, what do we need to do?
 
 ## Licence
 
