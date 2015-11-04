@@ -257,7 +257,7 @@ This is different as soon as we allow our workforce a bit more consciousness, as
 
 ### Patching Event Dispatch
 
-The first approach we'll evaluate is to replace the first bit of the dispatcher/router/handler trio. Our patched dispatch routine allows us to specify not only which events and arguments to dispatch, but also _where to_. As events, unlike function calls, produce no results for the dispatcher, that's all we need to add to make our new dispatch functional. So ```(dispatch [:witty 42])``` becomes ```(dispatch' witty-worker [:witty 42])``` which enables any worker to post an event into ```witty-worker```'s event loop. Remember, if we need information "back" from the other worker, our event choreography will ```(dispatch manager [:witty-response "it's the answer"])``` down the road, which will give us a return channel for data via events across these workers. Addressing of workers must remain static at this stage. To achieve dynamic worker addressing, the handling of the worker registry etc. would need to be visible as a first-class citizen of our application, just as threshold-crossing points will be visible by explicit use of ```(dispatch')```.
+The first approach we'll evaluate is to replace the first bit of the dispatcher/router/handler trio. Our patched dispatch routine allows us to specify not only which events and arguments to dispatch, but also _where to_. As events, unlike function calls, produce no results for the dispatcher, that's all we need to add to make our new dispatch functional. So ```(dispatch [:witty 42])``` becomes ```(dispatch' witty-worker [:witty 42])``` which enables any worker to post an event into ```witty-worker```'s event loop. Remember, if we need information "back" from the other worker, our event choreography will ```(dispatch' manager [:witty-response "it's the answer"])``` down the road, which will give us a return channel for data via events across these workers. Addressing of workers must remain static at this stage. To achieve dynamic worker addressing, the handling of the worker registry etc. would need to be visible as a first-class citizen of our application, just as threshold-crossing points will be visible by explicit use of ```(dispatch')```.
 
 ### Patching Event Routing
 
@@ -266,6 +266,15 @@ The second approach is to leave dispatch untouched, and instead concentrate on t
 ### Patching Event Handling
 
 The third approach would be to leave dispatch and event routing intact, but instead patch ```(handler)``` to off-load the computation to another worker. This ```(handler')``` would call ```(handle)``` in the foreign context. Information on where to dispatch the computation to could be explicitly stored in the event data (thus tainting your state), or statefully (and globally) managed in a way so that ```(handler')``` can access it to determine which worker to offload the computation to. Just as with a patched event router, this dynamic routing setup would be less local and visible than in the event dispatch patch approach. At the same time, this worker routing setup is the only change from the present code of our re-frame app.
+
+### Routing Registry
+
+Every approach above needs some help with deciding on the target for the event. ```(dispatch')``` has the address (or its lookup) explicitly next to the event. ```(router-loop')``` and ```(handler')``` both separate the registry from their ("natural") API by implying its existence and access to it. This documents the necessity of a worker dispatch table that can return the correct worker to ```.postMessage``` something to. Yet what should be the key to this map? Conceptually there is a difference in the lookup the patched router does vs. the lookup of the patched handler. The former wants to "find a handler" based on the event (-key). The latter wants to get the job done. So naturally, the event key would qualify for the lookup key of the patched router. But what would the patched handler use? Conceptually, it seems to be most closely related to the _computation_, but this computation has been looked up with the event as a key! So the event-key looks like a good fit for the routing registry key.
+
+Of the existing API, we already explicitly specify the event key when we register handler functions. We could alter this registration process to include the routing registry information. Or we could use specialized utility functions that document and establish the routing registry. Either way, looking at our event handlers, we would want this routing information to be locally close to the handler registrations.
+
+At the same time, we might _not_ want to update our handler registrations, or cloud the vision onto event handling by orthogonal concepts such as computational distribution. In that case, we might rather want to use a global definition structure which maps workers onto the set of keys they will handle.
+
 
 ## Logging And Debugging
 
