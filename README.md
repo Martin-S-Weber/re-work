@@ -210,23 +210,28 @@ While we were gazing at the innards of [servant] to understand how it will impac
 So let's revisit responsibilities. We began our journey with something akin the following which we shall call the monolith.
 
 **The Monolith**
+
 <img src="resources/img/re-frame-app-monolith.png" title="The Monolith" />
 
 and we want to spread out computation. Our first stop on our way had us evaluate [servant] and what necessities it exhibits. With spreading plain API calls onto worker threads (or thread pools), we handle the additional contexts as slave workers, without responsibility (or additional possibilities) with regard to state management. Data is copied across the threshold in both directions for each API call wrapped this way (with ```(defservantfn)```). With one responsible party and a lot of slaves, let's call this the plantation:
 
 **The plantation**
+
 <img src="resources/img/re-frame-app-multilith.png" />
 
 In our critique of the servant solution we have come to the realization that workers and the re-frame app is a natural fit. We are beginning to divide responsibilities of our application so that it using workers is a natural fit into our (re-frame event- and subscription-) API. The goal is to evolve towards mostly emancipated workers with local responsibility and power (db & event loop with handlers) which communicate with ... events, while the high frequency events are preferrably triggered and handled within the same worker. We shall call this the team:
 
 **The team**
+
 <img src="resources/img/re-frame-app-multilith2.png" />
 
-And while we're at moving state and computation away from the main context, why not get rid of _all_ of it but the most necessary pieces so our "dirty deeds" can be done? And introduce a single worker, whose job it is just to hold the global state of the application, while our main js context concentrates on as little state as possible. The majority of computation (and state manipulation!) now happens asynchronously in foreign, isolated js contexts.
+And while we're at moving state and computation away from the main context, why not get rid of _all_ of it but the most necessary pieces so our "dirty deeds" can be done? And introduce a single worker, whose job it is just to hold the global state of the application, while our main js context concentrates on as little state as possible. The majority of computation (and state manipulation!) now happens asynchronously in foreign, isolated js contexts. We now have a manager who does the real work but remains in the shadows, plus one context for representational purposes. Additionally a grey hidden workforce churns. Let's call this the republic:
+
+**The republic**
 
 <img src="resources/img/re-frame-app-multilith3.png" />
 
-We should have a feeling of full circle with regards to [distributing computation](#distributing-computation). If having one re-frame event loop per context is fine, state and computation is locally bundled together to persist in this worker, then we can move our re-frame components between workers (and/or the main context) without having to adjust their API. They remain just handlers that interact with other handlers, there's no synchronous threshold involved. ...assuming we find a way to route events and data updates.
+We should have a feeling of full circle with regards to [distributing computation](#distributing-computation) when looking at the republic and the team. If having one re-frame event loop per context is fine, state and computation is locally bundled together to persist in this worker, then we can move our re-frame components between workers (and/or the main context) without having to adjust their API. They remain just handlers that interact with other handlers, there's no synchronous threshold involved. ...assuming we find a way to route events and data updates, which shall be the next stops of our journey.
 
 ## Event Flow
 
