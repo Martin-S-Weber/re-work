@@ -233,13 +233,13 @@ And while we're at moving state and computation away from the main context, why 
 
 #### Multiple me's and the {monolith,plantation,team,republic}
 
-What happens when the end-user initiates our application multiple times (as in, multiple contexts open at the same time, two tabs open for example). This is only interesting in the case when these contexts can communicate (i.e., are within the same runtime environment), because when they cannot, there is no means of sharing state or computations directly.
+What happens when the end-user initiates our application multiple times (as in, multiple contexts open at the same time, two tabs open for example). This is only interesting in the case when these contexts can communicate (i.e., are within the same runtime environment), because when they cannot, there is no means of sharing state or computations directly. We shall consider the case of _me and myself_ and postulate that induction will take care of _me, myself and I_ and all the further increments.
 
 **me, myself and the monolith** - In this case the application simply does the work the application does multiple times. There's multiple top-level contexts, each with their own state and setup for computation. Not only are those contexts isolated from each other, but they are ignorant as well. If state transitions in for _me_ and _myself_ initiate I/O with the outside, there _is_ already a split-brain situation. 
 
 **me, myself and the plantation** - If the plantation is implemented using [servant], that means we are bound to using plain [WebWorker]s. These are private and not shareable. The verdict is the same as for the monolith: without other means of first-class synchronization between top-level contexts work is duplicated, state is isolated from each other, and the applications are ignorant of each other. Was there a _plantation_ implementation using shared or service workers, there would be potential for sharing access to the slaves, rendering the only requirement of leaving them pristine post-usage. XXX: This is worth re-visiting (as in, provide code to run servant facade on shared workers and service workers).
 
-From hereon out, we shall assume that there is a non-servant implementation which allows us which worker to use. Additionally we are concerning ourselves with the possibility of sharing workers between top-level application contexts. If we weren't, the net result in the evaluation of multiple top-level accesses does not change from the above.
+From hereon out, we shall assume that there is some implementation which allows us which worker to use. Additionally we are concerning ourselves with the possibility of sharing workers between top-level application contexts. If we weren't, the net result in the evaluation of multiple top-level accesses does not change from the above.
 
 **me, myself and the team** - Here we regard _me_ and _myself_ as the manager of the team. There is potential to re-using the services of the team members of another manager, but only if the team members have been prepared before-hand to deal with the additional context of routing results back to the caller. Local state build-up in the team members is supported (and encouraged), as long as the context remains clear. Even though a lot of services are being re-used, the _global_ state is reproduced and we are letting the end-user face two separate application entities.
 
@@ -249,11 +249,23 @@ We should have a feeling of full circle with regards to [distributing computatio
 
 ## Event Flow
 
-### Dispatching Events
+The event flow is made up by bits and pieces used together: _dispatching_ an event to put it on the queue of events to be handled; _routing_ this event, i.e., the process of determining the correct handler to apply to the event; _handling_ the event, as in calling its handler; loop all of this.
 
-### Event Handlers
+When looking at the _monolith_ or the _plantation_, there is only one entity responsible for handling events, so there is nothing new to be said about their event flows. Even the plantation slaves cannot induce events, best they can do is come up with suggestions which further events to handle. If we trust our slaves, we can just inject those events into our event veins. Nonetheless, the event handling itself does not change.
 
-### Routing
+This is different as soon as we allow our workforce a bit more consciousness, as now instead of simple orders, communication and coordination has to be possible between the different event spaces within each javascript context. With the multiple entities, each has its private dispatcher/router/handler space, as they share no data across the js contexts. Yet at the same time the set of events to be handled spans across all their combined shoulders. So, globally, we have a few choices which enable cross-context event integration.
+
+### Patching Event Dispatch
+
+The first approach we'll evaluate is to replace the first bit of the dispatcher/router/handler trio. Our patched dispatch routine allows us to specify not only which events and arguments to dispatch, but also _where to_. As events, unlike function calls, produce no results for the dispatcher, that's all we need to add to make our new dispatch functional. So ```(dispatch [:witty 42])``` becomes ```(dispatch' witty-worker [:witty 42])``` which enables any worker to post an event into ```witty-worker```'s event loop. Remember, if we need information "back" from the other worker, our event choreography will ```(dispatch manager [:witty-response "it's the answer"])``` down the road, which will give us a return channel for data via events across these workers. Addressing of workers must remain static at this stage. To achieve dynamic worker addressing, the handling of the worker registry etc. would need to be visible as a first-class citizen of our application, just as threshold-crossing points will be visible by explicit use of ```(dispatch')```.
+
+### Patching Event Routing
+
+The second approach is to leave dispatch untouched, and instead concentrate on the router bit. Our patched router would _know_ which worker handler resides in which worker space, wrap the event up for cross-context transport, and put it onto the foreign worker's context (assume we had a function ```(dispatch')``` which could do this for us). Our ```(router-loop')``` could offer ways to dynamically access (and change) the mapping of events to workers. As the routing itself is dynamic, worker pools (sequentially alternating dispatches) could be had as well. The use of this feature would be behind the scenes of our re-frame application, thus not visibly impacting the code.
+
+### Patching Event Handling
+
+The third approach would be to leave dispatch and event routing intact, but instead patch ```(handler)``` to off-load the computation to another worker. This ```(handler')``` would call ```(handle)``` in the foreign context. Information on where to dispatch the computation to could be explicitly stored in the event data (thus tainting your state), or statefully (and globally) managed in a way so that ```(handler')``` can access it to determine which worker to offload the computation to. Just as with a patched event router, this dynamic routing setup would be less local and visible than in the event dispatch patch approach. At the same time, this worker routing setup is the only change from the present code of our re-frame app.
 
 ## Logging And Debugging
 
