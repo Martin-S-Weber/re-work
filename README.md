@@ -8,12 +8,12 @@
 
 Either:
 
-1.  You want to develop an [SPA] in [re-frame], and you are doing heavy-weight computations, or
+1.  You want to develop an [SPA] in [re-frame] and run (parts or all) of it on workers.
 2.  Well, that's it, really.
 
-re-work is the documentation of a journey towards running a re-frame app on the [WebWorkerAPI]: on [WebWorker]s, on [servant]s, on [SharedWorker]s, on [ServiceWorker]s. The application transforms and morphs into different centres of gravity throughout our voyage, implications included. re-work attempts to capture those, so you can travel faster from the start point ("I have a re-frame app and I want to use workers") to one of the multiple destinations. It is your own personal how-to and a bit of support code.
-
 ## re-work
+
+re-work is the documentation of a journey towards running a re-frame app on the [WebWorkerAPI]: on [WebWorker]s, on [servant]s, on [SharedWorker]s, on [ServiceWorker]s. The application transforms and morphs into different centres of gravity throughout our voyage, implications included. re-work attempts to capture those, so you can travel faster from the start point ("I have a re-frame app and I want to use workers") to one of the multiple destinations. It is your own personal how-to and a bit of support code.
 
 re-frame is documenting patterns for writing [SPAs] in ClojureScript, using [re-frame] and [component]s, so the application can successfully facilitate the [WebWorkerAPI].
 
@@ -166,6 +166,8 @@ Whoa there, holy complexity. Or, is it? We'll revisit that in a bit. Let's assum
 
 The "_servant protocol_" tips the hat to the fact that there's two ways of passing arguments between execution contexts - either perform a structured clone (a deep copy of data which can be copied, see the algorithm) or actually hand over the data to the other execution context (via the [Transferable] interface (specifically ```ArrayBuffer```s)), cf. [data transfer]. There's an obvious consideration between safety, simplicity and immutability to be had vs. extra performance here. [servant] doesn't make the choice for us, but instead offers functions to either copy (```(standard-message)```) or transfer (back and forth: ```(array-buffer-message)``` to, but not back: ```(array-buffer-message-standard-reply)```) data, and uses the encoder function as argument for the dispatch. The protocol itself just tells the receiving end which function to call, how its arguments were passed and what sort of data transfer mechanism for the reply is expected.
 
+##### Technique 
+
 With these tools at our disposal, we can actually tackle the CPU hog simply by dispatching our computations onto multiple servant-managed workers. With our usage of re-frame itself, we have been taught how to break up a "bigger" event handler into smaller ones - this time we are breaking it up into three sections:
 
 1. argument handling/passing
@@ -173,6 +175,8 @@ With these tools at our disposal, we can actually tackle the CPU hog simply by d
 3. receiving the result of the computation
 
 In our main js context, we initiate the passing off of data and responsibility of execution to the worker, which then begins the required computation. Once it is finished, it will return its result by notifying the main js context. Servant will put the resulting values onto the result channel. All we have to do is to get the value out once it's there, and the final considerations upon receipt of the result can be performed in the main js context. Particularly, the resulting value(s) can be stored in the application database, making them available for the views to render, further events down the road and so forth.
+
+_**XXX**: Detail what is meant by the above: non re-frame-app - structured API calls into worker threads or worker thread pools. Slaves shall serve and all. No impact on the app itself except for the data transfer consideration (how costly is rendering & reading the data? how costly the transfer? show with sample which is the costlier and how their relative cost relates). + cljs objs cannot be natively transferred - rendering via clj->js, transit, more_
 
 #### Critique & Aesthetics
 
@@ -203,16 +207,19 @@ Of course _global_ state synchronization is trivial (a handler ```(register-hand
 
 While we were gazing at the innards of [servant] to understand how it will impact our own application, we have noticed one thing: Workers are nearly trivially easy to use. Plus what servant itself is doing (_its_ event handling loop) is pretty self-explanatory and short as well. In our first sketch of the [distributed computation](#distributed-computation), we omitted all the arrows for the data flow. Was the fact that we can call ```postMessage``` in both directions too trivial? servant certainly exhibits the knobs via its encoding function. But it also does more work to automatically have the result make their way back. But... do we _need_ the results (as in, private foreign context state) in our main js context? Essentially all we need to know is what we want to show. So the question is "some of it, probably". The rest may return in its black box for all we care.
 
-So let's revisit responsibilities. We began our journey with something akin the following
+So let's revisit responsibilities. We began our journey with something akin the following which we shall call the monolith.
 
-<img src="resources/img/re-frame-app-monolith.png" />
+**The Monolith**
+<img src="resources/img/re-frame-app-monolith.png" title="The Monolith" />
 
-and we want to spread out computation so that it looks more like this
+and we want to spread out computation. Our first stop on our way had us evaluate [servant] and what necessities it exhibits. With spreading plain API calls onto worker threads (or thread pools), we handle the additional contexts as slave workers, without responsibility (or additional possibilities) with regard to state management. Data is copied across the threshold in both directions for each API call wrapped this way (with ```(defservantfn)```). With one responsible party and a lot of slaves, let's call this the plantation:
 
+**The plantation**
 <img src="resources/img/re-frame-app-multilith.png" />
 
-We acknowledge that computation without data (and thus state) is hard at best, so the state starts moving away...
+In our critique of the servant solution we have come to the realization that workers and the re-frame app is a natural fit. We are beginning to divide responsibilities of our application so that it using workers is a natural fit into our (re-frame event- and subscription-) API. The goal is to evolve towards mostly emancipated workers with local responsibility and power (db & event loop with handlers) which communicate with ... events, while the high frequency events are preferrably triggered and handled within the same worker. We shall call this the team:
 
+**The team**
 <img src="resources/img/re-frame-app-multilith2.png" />
 
 And while we're at moving state and computation away from the main context, why not get rid of _all_ of it but the most necessary pieces so our "dirty deeds" can be done? And introduce a single worker, whose job it is just to hold the global state of the application, while our main js context concentrates on as little state as possible. The majority of computation (and state manipulation!) now happens asynchronously in foreign, isolated js contexts.
