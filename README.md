@@ -308,6 +308,25 @@ In fact, ```MessagePort```s are _transferrable_, i.e., we can let go of a messag
 
 #### Worker Components
 
+We remember for an instant that we decided to like grouping our application state in [component]s and facilitating them for lifecycle management of the application itself. We indulge in us specifying dependencies of our components and rejoice in knowing that they will be started and stopped in the correct order, as well as having a centralized cellar for our stateful skeletons. 
+
+**Application With Components**
+
+<img src="resources/img/components1.png" />
+
+So it is just natural that we also want to use components within our workers. As a worker we have the availability of a separate entry point into our code, the question arises what we will do with it. Also given the fact that workers enjoy having their own execution context, we have to acknowledge that these contexts are separate and independent. In other words, there is no builtin mechanism for both state and lifecycle synchronization (not completely true, as whoever holds a reference onto the worker object -- thanks to chrome this will be the main js context -- can ```terminate``` it from the outside).
+
+**Application with Worker Components**
+
+<img src="resources/img/components2.png" />
+
+We do have ```postMessage``` on the worker though, so we can establish a lifecycle coordination protocol between the involved execution contexts. This should be a builtin feature of the component building blocks provided by re-work, so we don't have to worry about lifecycle coordination between our involved parties. There are many possibilities to implement life cycle coordination of independent execution context components (CORBA demonstrates one extreme), we prefer to "Keep It Simple, Stupid" though. Which is why there is no component registry, automatic life cycle management, suspending or activating beyond what the browser will do already for us anyways, etc. Instead re-work opts for a simple master-and-slaves model. Remembering the Worker Birth Trampoline has to be sitting in the main js context, we naturally decide for the main thread as "owning" the application state. In other words, it will start not only each worker abstraction, but also manage each component abstraction. When the main application is shutting down, it will instruct its worker components to shut down as well. That makes it desirable to have a representation of the component within the main application component itself. This brings us to the worker facade component.
+
+#### Worker Facade Component
+
+This is the component that implements the [component] lifecycle and can be used as a dependency of the application system (within the main js context). As the name implies, it is a facade around the worker. Its implementation of ```start``` and ```stop``` launches and reaps workers, respectively. Additionally, it waits for the worker to emit its event signaling that the worker system has started successfully. This implies a component on the other end to emit this signal. Together with the worker peer, the facade extends [component] lifecycle management to the workers and thus back over the whole application.
+
+
 ### Shopping List => API
 
 - Routing Registry
