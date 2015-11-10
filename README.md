@@ -330,12 +330,16 @@ This is the component that implements the [component] lifecycle and can be used 
 
 <img src="resources/img/components3.png" />
 
-#### Worker Protocol Hijacking
+#### Worker Protocols
 
-FIXME Do we want to call ```postMessage``` explicitly? (I think not!)
+With the lifecycle coordination / communication established, what else would our re-work workers need to handle? Our approach was to keep our code as worker-agnostic as possible. In particular, we are not interested in launching workers ourself, or using a naked ```postMessage```. Instead, there exist two sets of protocols the workers need to implement:
 
-The workers need to be able to understand certain messages posted to them to support the lifecycle protocol. At the same time, there might be a need for re-frame API to communicate across workers. Native JSON does not offer an out-of-band option like in clojure with namespaced keys. This would call for wrapping the communication between the workers. Another option would be to use transit for a transfer of data without loss of format, re-allowing for out-of-band communication.
+1. Lifecycle protocol
+2. re-frame protocol
 
+We have seen the necessity for the Lifecycle protocol already, whereas the re-frame protocol implements sharing events and state (or partial state) among the workers so that we can keep using ```(dispatch)```.
+
+**Lifecycle Protocol** The life cycle protocol exists to communicate and coordinate component state. It thus must be possible to trigger execution of both ```(component/start)``` and ```(component/stop)``` in the foreign context. When considering the problem of multiple selves (cf. [Multiple me's and the {monolith,plantation,team,republic}](#multiple-mes-and-the-monolithplantationteamrepublic)), we realize the foreign js context does not need to slavishly follow the master's wishes -- there might be another application entity connected to the worker pool (in case of [SharedWorker]s or [ServiceWorker]s), and shutting down the worker components might not be what we want after all. This implies different facade peer component types for use by the workers.
 
 
 ### Shopping List => API
