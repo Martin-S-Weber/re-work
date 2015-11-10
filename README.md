@@ -233,7 +233,7 @@ And while we're at moving state and computation away from the main context, why 
 
 #### Multiple me's and the {monolith,plantation,team,republic}
 
-What happens when the end-user initiates our application multiple times (as in, multiple contexts open at the same time, two tabs open for example). This is only interesting in the case when these contexts can communicate (i.e., are within the same runtime environment), because when they cannot, there is no means of sharing state or computations directly. We shall consider the case of _me and myself_ and postulate that induction will take care of _me, myself and I_ and all the further increments.
+What happens when the end-user initiates our application multiple times (as in, multiple contexts open at the same time, two tabs open for example). This is only interesting in the case when these contexts can communicate (i.e., are within the same runtime environment), because when they cannot, there is no means of sharing state or computations directly. We shall consider the case of going from _me_ to _me and myself_ and postulate that induction will take care of _me, myself and I_ and all the further increments.
 
 **me, myself and the monolith** - In this case the application simply does the work the application does multiple times. There's multiple top-level contexts, each with their own state and setup for computation. Not only are those contexts isolated from each other, but they are ignorant as well. If state transitions in for _me_ and _myself_ initiate I/O with the outside, there _is_ already a split-brain situation. 
 
@@ -277,6 +277,21 @@ At the same time, we might _not_ want to update our handler registrations, or cl
 
 
 ### Worker Lifecycle management
+
+#### Worker Birth Trampoline
+
+Sadly, at least a major browser (to point a finger, I'm talking about you, chromium!) decided to not completely implement the [WebWorkerAPI]. In particular, there's a crucial derivation from the capabilities that Workers ought to have: in chrome, workers cannot create workers! So all the nice automatic features that the W3C came up with for worker parent-child relationships and their architectural implications are void. They claim one could always simulate the feature. It is somewhat similar to a systems programmer coming to implement clojure and deciding not to bother with immutable collections because they couldn't see their use. Sadly this will never be a reason for anybody to boycot the offending browser.
+
+**What we wanted**
+
+<img src="resources/img/workers1.png" />
+
+What this means, in practice, is that we cannot create architectural units that both are relocatable to a worker and at the same time tackle problems in parallel with workers launched when and how that architectural unit wants it. Instead we are faced with a situation where a compat shim has to offer us the functionality of spawning workers so that the unit becomes relocatable between js contexts and still remain functional. Alternatively, we could restrict ourselves to architectural units that do not spawn further workers, i.e., break down the units enough that, again, one unit per one context with a static setup from "the outside, once" will be good enough for us.
+
+**What we got instead**
+
+<img src="resources/img/workers2.png" />
+
 
 ### Shopping List => API
 
