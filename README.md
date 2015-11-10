@@ -330,6 +330,13 @@ This is the component that implements the [component] lifecycle and can be used 
 
 <img src="resources/img/components3.png" />
 
+#### Worker Protocol Hijacking
+
+FIXME Do we want to call ```postMessage``` explicitly? (I think not!)
+
+The workers need to be able to understand certain messages posted to them to support the lifecycle protocol. At the same time, there might be a need for re-frame API to communicate across workers. Native JSON does not offer an out-of-band option like in clojure with namespaced keys. This would call for wrapping the communication between the workers. Another option would be to use transit for a transfer of data without loss of format, re-allowing for out-of-band communication.
+
+
 
 ### Shopping List => API
 
