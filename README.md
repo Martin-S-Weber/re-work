@@ -292,6 +292,18 @@ What this means, in practice, is that we cannot create architectural units that 
 
 <img src="resources/img/workers2.png" />
 
+Responsibility for creating webworkers will always fall back to the main js context because of this. Sadly this creates unnecessary complexity we will just have to deal with. Our answer to this is the worker birth trampoline. It will start out as a set of utilities for the main js context that launches workers, but naturally evolve towards being able to wire together the ```MessagePort``` interfaces of the created workers. When this is done, the trampoline can begin answering requests for launching workers and wiring them up accordingly within the main js context. Keep in mind that this puts pressure no the main js event loop though. With the republic, above, we have to wonder whether it's possible to alter the picture slightly, and put the work of event routing between workers into its own worker (the president, so to speak).
+
+**Presidial Routing**
+
+<img src="resources/img/workers3.png" />
+
+In fact, ```MessagePort```s are _transferrable_, i.e., we can let go of a message port object in one js context to receive it in another. This transferred ```MessagePort``` can be used in the receiving context to set up the event handling loop. Now we have moved the piping together of worker events off the main js context event loop and put it into the worker instead. This requires a sertain set of hoops to jump through in the following choreography.
+
+**Worker Birth Choreography**
+
+<img src="resources/img/workers4.png" />
+
 
 ### Shopping List => API
 
