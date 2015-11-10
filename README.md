@@ -326,6 +326,10 @@ We do have ```postMessage``` on the worker though, so we can establish a lifecyc
 
 This is the component that implements the [component] lifecycle and can be used as a dependency of the application system (within the main js context). As the name implies, it is a facade around the worker. Its implementation of ```start``` and ```stop``` launches and reaps workers, respectively. Additionally, it waits for the worker to emit its event signaling that the worker system has started successfully. This implies a component on the other end to emit this signal. Together with the worker peer, the facade extends [component] lifecycle management to the workers and thus back over the whole application.
 
+**Components communicating**
+
+<img src="resources/img/components3.png" />
+
 
 ### Shopping List => API
 
