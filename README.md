@@ -278,6 +278,8 @@ At the same time, we might _not_ want to update our handler registrations, or cl
 
 ### Worker Lifecycle management
 
+There are two pieces involved in the worker lifecycle management, just as there are two js execution contexts involved. Lifecycle management of the worker object, i.e., our outer reference to the worker, is handled by the Worker Birth Trampoline (see below why we need that one). Then there is the execution context _within_ the worker, whose Lifecycle we also want to manage. We postulate usage of [component]s within our workers, and thus trust there is a top level system to start within the worker that can be handled by [component]. Which leaves the necessity to communicate / coordinate the lifecycles states of the various execution contexts. This is address in [Worker Components](#worker-components).
+
 #### Worker Birth Trampoline
 
 Sadly, at least a major browser (to point a finger, I'm talking about you, chromium!) decided to not completely implement the [WebWorkerAPI]. In particular, there's a crucial derivation from the capabilities that Workers ought to have: in chrome, workers cannot create workers! So all the nice automatic features that the W3C came up with for worker parent-child relationships and their architectural implications are void. They claim one could always simulate the feature. It is somewhat similar to a systems programmer coming to implement clojure and deciding not to bother with immutable collections because they couldn't see their use. Sadly this will never be a reason for anybody to boycot the offending browser.
@@ -304,6 +306,7 @@ In fact, ```MessagePort```s are _transferrable_, i.e., we can let go of a messag
 
 <img src="resources/img/workers4.png" />
 
+#### Worker Components
 
 ### Shopping List => API
 
