@@ -1,32 +1,7 @@
 (ns re-work.components
-  (:require [com.stuartsierra.component :as component]))
-
-;; note:
-;; dedicated workers work as MessagePorts themselves
-;; shared ( & service) workers HAVE MessagePorts
-;;
-(defn- post-to-port [worker-port message & transfers]
-  )
-
-(defn- lifecycle-protocol []
-  )
-
-;;; private API
-(defn- launch-web-worker [facade]
-  )
-
-;; shared worker pooltop level component
-;; warning:
-;; - shared worker portability / availability
-(defn- launch-shared-worker [facade]
-  )
-
-;; service worker pool
-;; warning:
-;; - service worker portability / availability
-;; - lifecycle handling: http://www.w3.org/TR/2015/WD-service-workers-20150205/#service-worker-lifetime
-(defn- launch-service-worker [facade]
-  )
+  (:require 
+    [com.stuartsierra.component :as component]
+    [re-work.workers :as workers]))
 
 
 ;;; public API
@@ -34,7 +9,7 @@
 (defrecord WorkerFacade [create-worker worker-opts]
   component/Lifecycle
   (start [component]
-    (let [w (create-worker component)
+    (let [w (create-worker (:worker-opts component)
           ;; send worker init signal
           ;;
           ;; wait for init reply from worker
@@ -61,19 +36,20 @@
   (stop [component]
     component))
 
+
 ;; private worker pool
 (defn web-worker [worker-opts]
-  (->WorkerFacade launch-web-worker worker-opts))
+  (->WorkerFacade workers/launch-web-worker worker-opts))
 
 ;; shared worker pooltop level component
 ;; warning:
 ;; - shared worker portability / availability
 (defn shared-worker [worker-opts]
-  (->WorkerFacade launch-shared-worker worker-opts))
+  (->WorkerFacade workers/launch-shared-worker worker-opts))
 
 ;; service worker pool
 ;; warning:
 ;; - service worker portability / availability
 ;; - lifecycle handling: http://www.w3.org/TR/2015/WD-service-workers-20150205/#service-worker-lifetime
 (defn service-worker [worker-opts]
-  (->WorkerFacade launch-service-worker worker-opts))
+  (->WorkerFacade workers/launch-service-worker worker-opts))
